@@ -4,8 +4,8 @@ import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 
 URL = "https://leakosintapi.com/"
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
-API_TOKEN = "YOUR_API_TOKEN_HERE"
+BOT_TOKEN = "8252573449:AAG6jEYERw3DDk1bSiXs9flAN_koRoX7AbU"
+API_TOKEN = "8176628365:sXgGAZTZ"
 LANG = "en"
 LIMIT = 300
 
