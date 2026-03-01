@@ -2,8 +2,8 @@ import requests
 from random import randint
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+import json
 
-# === CONFIGURATION ===
 URL = "https://leakosintapi.com/"
 BOT_TOKEN = "8252573449:AAG6jEYERw3DDk1bSiXs9flAN_koRoX7AbU"
 API_TOKEN = "8176628365:sXgGAZTZ"
@@ -16,7 +16,6 @@ cash_reports = {}
 def check_access(user_id):
     return True
 
-# === REPORT GENERATOR & UI FORMATTER ===
 def generate_report(query, query_id, user_id):
     global cash_reports
     data = {"token": API_TOKEN, "request": query.split("\n")[0], "limit": LIMIT, "lang": LANG}
@@ -26,11 +25,9 @@ def generate_report(query, query_id, user_id):
     except:
         return ["<pre><code>❌ SYSTEM ALERT: API is currently unreachable.</code></pre>"]
 
-    # Handle standard API errors
     if "Error code" in response:
         return [f"<pre><code>⚠️ API ERROR: {response['Error code']}</code></pre>"]
 
-    # SMART FIX: Detect if API limit is over / data is masked by Leakosint
     response_str = str(response).lower()
     if "subscription is over" in response_str or "data will be hidden" in response_str:
         return ["<pre><code>⚠️ API LIMIT EXHAUSTED\nYour Leakosint API token has run out of credits.\nPlease recharge your API token to view data.\n\n👨‍💻 Developer: toxic</code></pre>"]
@@ -47,36 +44,42 @@ def generate_report(query, query_id, user_id):
         if database_name == "No results found":
             continue
             
-        # Optional: Add InfoLeak text if you want it (Commented out based on previous request)
-        # info_leak = db_data.get("InfoLeak", "")
-        # if info_leak:
-        #     current_page_text += f"{info_leak}\n\n"
-            
         for report_data in db_data.get("Data", []):
-            record_text = "----------------------------------------\n"
+            temp_dict = {}
             
             for column_name, value in report_data.items():
                 display_key = column_name
                 col_lower = column_name.lower()
                 
-                # Name / Father Name swap logic
                 if col_lower == "name":
                     display_key = "Father Name"
                 elif col_lower in ["father name", "fathername", "father_name", "fullname"]:
                     display_key = "Name"
                 
-                # Sanitize data to prevent HTML breaking
                 safe_value = str(value).replace('<', '&lt;').replace('>', '&gt;')
-                record_text += f"• {display_key}: {safe_value}\n"
+                temp_dict[display_key] = safe_value
+            
+            ordered_dict = {}
+            priority_keys = ["Phone", "Name", "Father Name", "Address", "DocNumber"]
+            
+            for p_key in priority_keys:
+                if p_key in temp_dict:
+                    ordered_dict[p_key] = temp_dict.pop(p_key)
+                    
+            for k, v in temp_dict.items():
+                ordered_dict[k] = v
+
+            json_str = json.dumps(ordered_dict, indent=2, ensure_ascii=False)
+            record_text = f"{json_str}\n\n"
             
             if len(current_page_text) + len(record_text) > 3500:
-                pages.append(f"<pre><code class='language-text'>{current_page_text}\n👨‍💻 Developer: toxic</code></pre>")
+                pages.append(f"<pre><code class='language-json'>{current_page_text.strip()}</code></pre>\n👨‍💻 <b>Developer:</b> <i>toxic</i>")
                 current_page_text = record_text
             else:
                 current_page_text += record_text
                 
     if current_page_text.strip():
-        pages.append(f"<pre><code class='language-text'>{current_page_text}\n👨‍💻 Developer: toxic</code></pre>")
+        pages.append(f"<pre><code class='language-json'>{current_page_text.strip()}</code></pre>\n👨‍💻 <b>Developer:</b> <i>toxic</i>")
         
     if not pages:
         return ["<pre><code>📭 NO DATA FOUND.</code></pre>"]
@@ -84,7 +87,6 @@ def generate_report(query, query_id, user_id):
     cash_reports[str(query_id)]['pages'] = pages
     return pages
 
-# === KEYBOARD PAGINATION ===
 def create_inline_keyboard(query_id, page_id, count_page):
     markup = InlineKeyboardMarkup()
     if count_page <= 1:
@@ -103,7 +105,6 @@ def create_inline_keyboard(query_id, page_id, count_page):
     )
     return markup
 
-# === BOT HANDLERS ===
 @bot.message_handler(commands=["start"])
 def send_welcome(message):
     markup = InlineKeyboardMarkup()
@@ -111,9 +112,9 @@ def send_welcome(message):
         InlineKeyboardButton("Lofi Bots", url="https://t.me/lofibots"),
         InlineKeyboardButton("👨‍💻 Developer", url="https://t.me/toxic_io")
     )
-    bot.reply_to(message, "🔥 <b>Advanced OSINT System</b>\n\nUse <code>/search &lt;target&gt;</code> in groups or send text here directly.\n\n<i>⚡ Secure. Fast. Private.</i>\n\n👨‍💻 <b>Developer:</b> toxic", reply_markup=markup)
+    bot.reply_to(message, "🔥 <b>Advanced OSINT System</b>\n\nUse <code>/find &lt;target&gt;</code> in groups or send text here directly.\n\n<i>⚡ Secure. Fast. Private.</i>\n\n👨‍💻 <b>Developer:</b> toxic", reply_markup=markup)
 
-@bot.message_handler(commands=["search"])
+@bot.message_handler(commands=["find"])
 def handle_search_command(message):
     process_search(message, is_command=True)
 
@@ -130,7 +131,7 @@ def process_search(message, is_command):
     query = message.text
     if is_command:
         if len(message.text.split(maxsplit=1)) < 2:
-            bot.reply_to(message, "⚠️ <b>FORMAT ERROR:</b> Use <code>/search target</code>")
+            bot.reply_to(message, "⚠️ <b>FORMAT ERROR:</b> Use <code>/find target</code>")
             return
         query = message.text.split(maxsplit=1)[1]
 
@@ -147,7 +148,7 @@ def process_search(message, is_command):
         pass
 
     if not report_pages:
-        bot.send_message(message.chat.id, "<pre><code>❌ SYSTEM FAULT: Generation failed.</code></pre>")
+        bot.send_message(message.chat.id, "<pre><code class='language-json'>❌ SYSTEM FAULT: Generation failed.</code></pre>")
         return
         
     markup = create_inline_keyboard(query_id, 0, len(report_pages))
@@ -190,6 +191,5 @@ def callback_query(call: CallbackQuery):
             pass 
 
 if __name__ == "__main__":
-    print("🚀 Bot is running in Pro Mode...")
     bot.infinity_polling(timeout=10, long_polling_timeout=5)
         
