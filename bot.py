@@ -51,9 +51,11 @@ def generate_report(query, query_id, user_id):
                 display_key = column_name
                 col_lower = column_name.lower()
                 
-                if col_lower == "name":
+                if col_lower == "fullname":
                     display_key = "Father Name"
-                elif col_lower in ["father name", "fathername", "father_name", "fullname"]:
+                elif col_lower in ["father name", "fathername", "father_name"]:
+                    display_key = "Father Name"
+                elif col_lower == "name":
                     display_key = "Name"
                 
                 safe_value = str(value).replace('<', '&lt;').replace('>', '&gt;')
@@ -112,9 +114,9 @@ def send_welcome(message):
         InlineKeyboardButton("Lofi Bots", url="https://t.me/lofibots"),
         InlineKeyboardButton("👨‍💻 Developer", url="https://t.me/toxic_io")
     )
-    bot.reply_to(message, "🔥 <b>Advanced OSINT System</b>\n\nUse <code>/find &lt;target&gt;</code> in groups or send text here directly.\n\n<i>⚡ Secure. Fast. Private.</i>\n\n👨‍💻 <b>Developer:</b> toxic", reply_markup=markup)
+    bot.reply_to(message, "🔥 <b>Advanced OSINT System</b>\n\nUse <code>/search &lt;target&gt;</code> in groups or send text here directly.\n\n<i>⚡ Secure. Fast. Private.</i>\n\n👨‍💻 <b>Developer:</b> toxic", reply_markup=markup)
 
-@bot.message_handler(commands=["find"])
+@bot.message_handler(commands=["search"])
 def handle_search_command(message):
     process_search(message, is_command=True)
 
@@ -131,7 +133,7 @@ def process_search(message, is_command):
     query = message.text
     if is_command:
         if len(message.text.split(maxsplit=1)) < 2:
-            bot.reply_to(message, "⚠️ <b>FORMAT ERROR:</b> Use <code>/find target</code>")
+            bot.reply_to(message, "⚠️ <b>FORMAT ERROR:</b> Use <code>/search target</code>")
             return
         query = message.text.split(maxsplit=1)[1]
 
@@ -192,4 +194,4 @@ def callback_query(call: CallbackQuery):
 
 if __name__ == "__main__":
     bot.infinity_polling(timeout=10, long_polling_timeout=5)
-        
+            
