@@ -1,3 +1,4 @@
+
 import requests
 from random import randint
 import telebot
@@ -51,17 +52,13 @@ def generate_report(query, query_id, user_id):
                 display_key = str(column_name).strip()
                 col_lower = display_key.lower()
                 
-                # --- EXACT MAPPING FIX ---
                 if col_lower == "name":
                     display_key = "Name"
-                elif col_lower == "fullname":
-                    display_key = "Father Name"
-                elif "father" in col_lower:
+                elif col_lower == "fullname" or "father" in col_lower:
                     display_key = "Father Name"
                 
                 safe_value = str(value).replace('<', '&lt;').replace('>', '&gt;')
                 
-                # Prevent duplicate key overwrite in JSON
                 while display_key in temp_dict:
                     display_key += " "
                     
@@ -201,4 +198,4 @@ def callback_query(call: CallbackQuery):
 
 if __name__ == "__main__":
     bot.infinity_polling(timeout=10, long_polling_timeout=5)
-                
+                    
