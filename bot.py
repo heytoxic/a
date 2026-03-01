@@ -108,8 +108,8 @@ def create_inline_keyboard(query_id, page_id, count_page):
 def send_welcome(message):
     markup = InlineKeyboardMarkup()
     markup.add(
-        InlineKeyboardButton("🚀 Channel", url="https://t.me/your_channel_link"),
-        InlineKeyboardButton("👨‍💻 Developer", url="https://t.me/your_username")
+        InlineKeyboardButton("Lofi Bots", url="https://t.me/lofibots"),
+        InlineKeyboardButton("👨‍💻 Developer", url="https://t.me/toxic_io")
     )
     bot.reply_to(message, "🔥 <b>Advanced OSINT System</b>\n\nUse <code>/search &lt;target&gt;</code> in groups or send text here directly.\n\n<i>⚡ Secure. Fast. Private.</i>\n\n👨‍💻 <b>Developer:</b> toxic", reply_markup=markup)
 
