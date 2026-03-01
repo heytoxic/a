@@ -48,25 +48,30 @@ def generate_report(query, query_id, user_id):
             temp_dict = {}
             
             for column_name, value in report_data.items():
-                display_key = column_name
-                col_lower = column_name.lower()
+                display_key = str(column_name).strip()
+                col_lower = display_key.lower()
                 
-                if col_lower == "fullname":
+                # --- EXACT NAME SWAP FIX ---
+                if col_lower == "name":
                     display_key = "Father Name"
-                elif col_lower in ["father name", "fathername", "father_name"]:
-                    display_key = "Father Name"
-                elif col_lower == "name":
+                elif col_lower == "fullname" or "father" in col_lower:
                     display_key = "Name"
                 
                 safe_value = str(value).replace('<', '&lt;').replace('>', '&gt;')
+                
+                # Yeh ensure karega ki koi data overwrite ya gayab na ho
+                while display_key in temp_dict:
+                    display_key += " "
+                    
                 temp_dict[display_key] = safe_value
             
             ordered_dict = {}
             priority_keys = ["Phone", "Name", "Father Name", "Address", "DocNumber"]
             
             for p_key in priority_keys:
-                if p_key in temp_dict:
-                    ordered_dict[p_key] = temp_dict.pop(p_key)
+                keys_to_pop = [k for k in temp_dict.keys() if k.strip() == p_key]
+                for k in keys_to_pop:
+                    ordered_dict[k] = temp_dict.pop(k)
                     
             for k, v in temp_dict.items():
                 ordered_dict[k] = v
@@ -114,10 +119,10 @@ def send_welcome(message):
         InlineKeyboardButton("Lofi Bots", url="https://t.me/lofibots"),
         InlineKeyboardButton("👨‍💻 Developer", url="https://t.me/toxic_io")
     )
-    bot.reply_to(message, "🔥 <b>Advanced OSINT System</b>\n\nUse <code>/search &lt;target&gt;</code> in groups or send text here directly.\n\n<i>⚡ Secure. Fast. Private.</i>\n\n👨‍💻 <b>Developer:</b> toxic", reply_markup=markup)
+    bot.reply_to(message, "🔥 <b>Advanced OSINT System</b>\n\nUse <code>/find &lt;target&gt;</code> in groups or send text here directly.\n\n<i>⚡ Secure. Fast. Private.</i>\n\n👨‍💻 <b>Developer:</b> toxic", reply_markup=markup)
 
-@bot.message_handler(commands=["search"])
-def handle_search_command(message):
+@bot.message_handler(commands=["find"])
+def handle_find_command(message):
     process_search(message, is_command=True)
 
 @bot.message_handler(func=lambda message: message.chat.type == "private")
@@ -133,7 +138,7 @@ def process_search(message, is_command):
     query = message.text
     if is_command:
         if len(message.text.split(maxsplit=1)) < 2:
-            bot.reply_to(message, "⚠️ <b>FORMAT ERROR:</b> Use <code>/search target</code>")
+            bot.reply_to(message, "⚠️ <b>FORMAT ERROR:</b> Use <code>/find target</code>")
             return
         query = message.text.split(maxsplit=1)[1]
 
@@ -194,4 +199,4 @@ def callback_query(call: CallbackQuery):
 
 if __name__ == "__main__":
     bot.infinity_polling(timeout=10, long_polling_timeout=5)
-            
+    
