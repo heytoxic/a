@@ -52,7 +52,7 @@ def generate_report(query, query_id, user_id):
                 display_key = str(column_name).strip()
                 col_lower = display_key.lower()
                 
-                if col_lower == "name":
+                if col_lower == "father":
                     display_key = "Name"
                 elif col_lower == "fullname" in col_lower:
                     display_key = "Father Name"
